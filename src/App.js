@@ -15,19 +15,9 @@ import MenuIcon from "@mui/icons-material/Menu";
 import { getExampleNumber } from "libphonenumber-js/min";
 import examples from "libphonenumber-js/mobile/examples";
 
-const menuItems = [
-  "Contact & Login",
-  "Connected accounts",
-  "Teams",
-  "Earnings",
-  "Availability",
-  "Audience",
-  "Billing",
-];
-
 const App = () => {
   // Settings Layout State
-  const [activeItem, setActiveItem] = useState("Contact & Login");
+  const [activeLink, setActiveLink] = useState("Contact & Login");
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   // Contact & Login State
@@ -36,9 +26,16 @@ const App = () => {
   const [messageType, setMessageType] = useState("SMS");
   const [phonePlaceholder, setPhonePlaceholder] = useState("(123) 123-1234");
   const [openDropdown, setOpenDropdown] = useState(false);
-
+  
   const phoneInputRef = useRef(null);
-  const isSmallScreen = useMediaQuery("(max-width:1024px)");
+  const isSmallScreen = useMediaQuery("(max-width:600px)");
+
+  const menuItems = [
+    { name: "Contact & Login", path: "#contact-login" },
+    { name: "Connected accounts", path: "#connected-accounts" },
+    { name: "Teams", path: "#teams" },
+    { name: "Earnings", path: "#earnings" },
+  ];
 
   // Contact & Login functions
   const handleCountryPhoneChange = (value, info) => {
@@ -47,7 +44,8 @@ const App = () => {
       updatePhonePlaceholder(info.country);
     }
     setOpenDropdown(false);
-
+  
+    // Ensure the drawer state updates properly
     setTimeout(() => {
       setIsDrawerOpen(false);
     }, 100);
@@ -149,203 +147,259 @@ const App = () => {
     }
   };
 
-  // Sidebar content component
-  const SidebarContent = () => (
-    <div className="h-full p-6">
-      <h2 className="mb-8 text-2xl font-semibold text-orange-500">Settings</h2>
-      <ul className="space-y-2 pl-0">
-        {menuItems.map((item) => (
-          <li
-            className={
-              "relative flex cursor-pointer items-center border-l-4 border-transparent px-4 py-2 text-xl text-gray-700 transition hover:bg-orange-50" +
-              (activeItem === item
-                ? " ml-3 border-orange-500 bg-orange-50 text-2xl font-bold text-gray-600"
-                : "")
-            }
-            key={item}
-            onClick={() => {
-              setActiveItem(item);
-              if (isSmallScreen) {
-                setIsDrawerOpen(false);
-              }
-            }}
-          >
-            {activeItem === item && (
-              <span className="absolute left-0 top-0 h-full w-1 rounded-r-lg bg-orange-500"></span>
-            )}
-            {item}
-          </li>
-        ))}
-      </ul>
+  // Sidebar Component with Conditional Padding
+  const SidebarContent = ({ smallPadding }) => (
+    <div className={`w-64 h-full ${smallPadding ? "p-4" : "p-8"}`}>
+      <h1 className="text-orange-500 text-2xl ml-2 mb-6 font-bold">Settings</h1>
+      <nav>
+        <ul>
+          {menuItems.map((item) => (
+            <a href={item.path} key={item.name} className="mb-[0.3rem] relative block">
+              <button
+                className={`flex items-center w-full py-3 px-4 pl-8 rounded-md ${
+                  activeLink === item.name
+                    ? "bg-orange-50 text-black pl-6"
+                    : "text-gray-500 hover:text-black"
+                }`}
+                onClick={() => {
+                  setActiveLink(item.name);
+                  setIsDrawerOpen(false);
+                }}
+              >
+                <i className="fas fa-users"></i>
+                {item.name}
+              </button>
+              {activeLink === item.name && (
+                <div className="absolute left-4 top-1/2 h-3/4 w-1 bg-orange-500 transform -translate-y-1/2 rounded-md"></div>
+              )}
+            </a>
+          ))}
+        </ul>
+      </nav>
     </div>
   );
 
-  return (
-    <div className="flex flex-col min-h-screen bg-gray-50">
-      {/* Mobile header with menu icon */}
-      <div className="lg:hidden flex items-center p-4 border-b border-gray-200 bg-white w-full">
-        <IconButton
-          edge="start"
-          color="inherit"
-          aria-label="menu"
-          onClick={() => setIsDrawerOpen(true)}
-          sx={{ mr: 2 }}
-        >
-          <MenuIcon />
-        </IconButton>
-        <h2 className="text-xl font-semibold text-orange-500">{activeItem}</h2>
-      </div>
-
-      <div className="flex flex-1">
-        {/* Desktop Sidebar */}
-        <aside className="hidden lg:block w-96 border-r border-gray-200 bg-gray-50">
-          <SidebarContent />
-        </aside>
-
-        {/* Mobile Drawer */}
-        <Drawer
-          anchor="left"
-          open={isDrawerOpen}
-          onClose={() => setIsDrawerOpen(false)}
-          sx={{
-            display: { lg: "none" },
-            "& .MuiDrawer-paper": { width: 280 },
-          }}
-        >
-          <SidebarContent />
-        </Drawer>
-
-        {/* Main Content */}
-        <main className="flex-1 p-4 sm:p-6 md:p-8">
-          <h1 className="hidden lg:block mb-8 text-2xl font-semibold">
-            {activeItem}
-          </h1>
-          <div className="space-y-6 w-full">
-            <section>
-              <h3 className="text-lg font-semibold mb-4">Contact info</h3>
-              <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm w-full">
-                <label className="block text-gray-700 mb-4">
-                  Receive posts at
-                </label>
-                <div className="flex flex-col sm:flex-row gap-4 w-full">
-                  {/* Phone inputs always side by side in their own container */}
-                  <div className="flex flex-row gap-4">
-                    <div ref={phoneInputRef} className="w-auto">
-                      <MuiTelInput
-                        value={countryPhone}
-                        onChange={handleCountryPhoneChange}
-                        defaultCountry="US"
-                        disableDropdown={false}
-                        sx={{
-                          ".MuiOutlinedInput-notchedOutline": {
-                            borderColor: "#d1d5db",
-                          },
-                          "& .MuiOutlinedInput-input": {
-                            padding: "10px",
-                            fontSize: "14px",
-                          },
-                          width: "100px",
-                        }}
-                      />
-                    </div>
-                    <TextField
-                      placeholder={phonePlaceholder}
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      size="small"
-                      sx={{
-                        ".MuiOutlinedInput-notchedOutline": {
-                          borderColor: "#d1d5db",
-                        },
-                        width: "100%",
-                        maxWidth: "140px",
-                      }}
-                    />
-                  </div>
-
-                  {/* Message type dropdown - full width on small screens */}
-                  <FormControl className="w-full sm:w-auto">
-                    <Select
-                      value={messageType}
-                      onChange={(e) => setMessageType(e.target.value)}
-                      size="small"
-                      sx={{
-                        ".MuiOutlinedInput-notchedOutline": {
-                          borderColor: "#d1d5db",
-                        },
-                        height: { xs: "34px", sm: "38px", md: "40px" },
-                        fontSize: { xs: "12px", sm: "13px", md: "14px" },
-                        minWidth: "130px",
-                        width: "100%",
-                      }}
-                      renderValue={(selected) => (
-                        <Box className="flex items-center gap-2">
-                          {getMessageIcon(messageType)}
-                          <span className="text-sm md:text-base font-medium">
-                            {selected}
-                          </span>
-                        </Box>
-                      )}
-                    >
-                      <MenuItem value="SMS">
-                        <img
-                          src="/sms.png"
-                          alt="SMS"
-                          className="w-4 h-4 sm:w-5 sm:h-5 mr-2"
-                        />
-                        SMS
-                      </MenuItem>
-                      <MenuItem value="Telegram">
-                        <img
-                          src="/telegram.png"
-                          alt="Telegram"
-                          className="w-4 h-4 sm:w-5 sm:h-5 mr-2"
-                        />
-                        Telegram
-                      </MenuItem>
-                      <MenuItem value="WhatsApp">
-                        <img
-                          src="/whatsapp.png"
-                          alt="WhatsApp"
-                          className="w-4 h-4 sm:w-5 sm:h-5 mr-2"
-                        />
-                        WhatsApp
-                      </MenuItem>
-                    </Select>
-                  </FormControl>
-                </div>
-              </div>
-            </section>
-
-            <section>
-              <h3 className="text-lg font-semibold mb-4">Login</h3>
-              <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm w-full">
-                <label className="block text-gray-700 mb-4">Email</label>
-                <TextField
-                  type="email"
-                  value="michaelhouck@gmail.com"
-                  size="small"
-                  fullWidth
+  // ContactLogin Content
+  const renderContactLoginContent = () => (
+    <div className="flex-1 sm:p-4 md:p-8">
+      <h2 className="text-xl md:text-2xl font-bold mb-6">Contact & Login</h2>
+      <div>
+        <h3 className="text-lg font-semibold mb-4">Contact info</h3>
+        <div className="mb-6 bg-white p-4 md:p-6 rounded-lg shadow-sm">
+          <label className="block text-gray-700 mb-2">Receive posts at</label>
+          <Box className="flex flex-wrap md:flex-nowrap items-start md:items-center gap-2 sm:gap-[0.5rem] md:gap-[0.5rem]">
+            <Box className="flex w-full gap-2 sm:gap-[0.5rem] md:w-auto">
+              <Box
+                className="relative w-full max-w-[110px] sm:max-w-[130px] cursor-pointer"
+                onClick={handleDropdownClick}
+              >
+                <MuiTelInput
+                  value={countryPhone}
+                  onChange={handleCountryPhoneChange}
+                  defaultCountry="US"
+                  disableDropdown={false}
+                  forceCallingCode
                   sx={{
                     ".MuiOutlinedInput-notchedOutline": {
                       borderColor: "#d1d5db",
                     },
+                    height: { xs: "34px", sm: "38px", md: "40px" },
+                    width: "100%",
+                    "& .MuiOutlinedInput-input": {
+                      padding: { xs: "6px", sm: "8px", md: "9px" },
+                      fontSize: { xs: "12px", sm: "13px", md: "14px" },
+                    },
                   }}
                 />
-              </div>
-            </section>
+                {!isSmallScreen && (
+                  <IconButton
+                    sx={{
+                      position: "absolute",
+                      right: 2,
+                      top: "50%",
+                      transform: "translateY(-50%)",
+                      padding: 0,
+                    }}
+                    onClick={handleDropdownClick}
+                  >
+                    <ArrowDropDown />
+                  </IconButton>
+                )}
+              </Box>
 
-            <div className="bg-white p-4 sm:p-6 rounded-lg shadow-sm flex items-center justify-between w-full">
-              <a
-                className="text-gray-700 hover:text-gray-900 font-medium"
-                href="#"
+              <TextField
+                placeholder={phonePlaceholder}
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                size="small"
+                sx={{
+                  width: "100%",
+                  maxWidth: { xs: "160px", sm: "140px", md: "160px" },
+                  height: { xs: "34px", sm: "38px", md: "40px" },
+                  ".MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#d1d5db",
+                  },
+                  "& .MuiOutlinedInput-input": {
+                    padding: { xs: "6px", sm: "8px", md: "9px" },
+                    fontSize: { xs: "14px", sm: "14px", md: "14px" },
+                  },
+                }}
+              />
+            </Box>
+
+            <FormControl className="w-full md:w-auto">
+              <Select
+                value={messageType}
+                onChange={(e) => setMessageType(e.target.value)}
+                size="small"
+                sx={{
+                  ".MuiOutlinedInput-notchedOutline": {
+                    borderColor: "#d1d5db",
+                  },
+                  height: { xs: "34px", sm: "38px", md: "40px" },
+                  fontSize: { xs: "12px", sm: "13px", md: "14px" },
+                  minWidth: "130px",
+                  width: "auto",
+                }}
+                renderValue={(selected) => (
+                  <Box className="flex items-center gap-2">
+                    {getMessageIcon(messageType)}
+                    <span className="text-sm md:text-base font-medium">
+                      {selected}
+                    </span>
+                  </Box>
+                )}
+                className="w-full md:w-auto"
               >
-                Change password
-              </a>
-              <ArrowForward className="text-gray-400" />
-            </div>
-          </div>
-        </main>
+                <MenuItem value="SMS">
+                  <img
+                    src="/sms.png"
+                    alt="SMS"
+                    className="w-4 h-4 sm:w-5 sm:h-5 mr-2"
+                  />{" "}
+                  SMS
+                </MenuItem>
+                <MenuItem value="Telegram">
+                  <img
+                    src="/telegram.png"
+                    alt="Telegram"
+                    className="w-4 h-4 sm:w-5 sm:h-5 mr-2"
+                  />{" "}
+                  Telegram
+                </MenuItem>
+                <MenuItem value="WhatsApp">
+                  <img
+                    src="/whatsapp.png"
+                    alt="WhatsApp"
+                    className="w-4 h-4 sm:w-5 sm:h-5 mr-2"
+                  />{" "}
+                  WhatsApp
+                </MenuItem>
+              </Select>
+            </FormControl>
+          </Box>
+        </div>
+
+        <h3 className="text-lg font-semibold mb-4 mt-6">Login</h3>
+        <div className="mb-6 bg-white p-4 rounded-lg shadow-sm">
+          <label className="block text-gray-700 mb-2">Email</label>
+          <TextField
+            type="email"
+            value="michaelhouck@gmail.com"
+            size="small"
+            sx={{
+              width: "100%",
+              maxWidth: "256px",
+              ".MuiOutlinedInput-notchedOutline": { borderColor: "#d1d5db" },
+            }}
+            className="w-full md:max-w-[256px]"
+          />
+        </div>
+
+        <div className="mb-6 bg-white p-4 rounded-lg shadow-sm flex items-center justify-between">
+          <a className="block text-gray-700 hover:text-black" href="#">
+            Change password
+          </a>
+          <ArrowForward
+            sx={{
+              color: "gray",
+              fontSize: { xs: 18, sm: 20, md: 24 }, // Decrease size on mobile
+            }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  // Placeholder content for other tabs
+  const renderConnectedAccountsContent = () => (
+    <div className="flex-1 sm:p-4 md:p-8">
+      <h2 className="text-xl md:text-2xl font-bold mb-6">Connected Accounts</h2>
+      <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm">
+        <p>Connected accounts content will go here.</p>
+      </div>
+    </div>
+  );
+
+  const renderTeamsContent = () => (
+    <div className="flex-1 sm:p-4 md:p-8">
+      <h2 className="text-xl md:text-2xl font-bold mb-6">Teams</h2>
+      <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm">
+        <p>Teams content will go here.</p>
+      </div>
+    </div>
+  );
+
+  const renderEarningsContent = () => (
+    <div className="flex-1 sm:p-4 md:p-8">
+      <h2 className="text-xl md:text-2xl font-bold mb-6">Earnings</h2>
+      <div className="bg-white p-4 md:p-6 rounded-lg shadow-sm">
+        <p>Earnings content will go here.</p>
+      </div>
+    </div>
+  );
+
+  // Render content based on active link
+  const renderContent = () => {
+    switch (activeLink) {
+      case "Contact & Login":
+        return renderContactLoginContent();
+      case "Connected accounts":
+        return renderConnectedAccountsContent();
+      case "Teams":
+        return renderTeamsContent();
+      case "Earnings":
+        return renderEarningsContent();
+      default:
+        return renderContactLoginContent();
+    }
+  };
+
+  return (
+    <div className="flex bg-blue-50 font-sans min-h-screen">
+      <div className="lg:hidden fixed top-4 right-2 z-50">
+        <IconButton
+          onClick={() => setIsDrawerOpen(true)}
+          className="bg-white hover:bg-gray-50"
+        >
+          <MenuIcon className="text-orange-500" />
+        </IconButton>
+      </div>
+
+      <Drawer
+        anchor="left"
+        open={isDrawerOpen}
+        onClose={() => setIsDrawerOpen(false)}
+      >
+        <SidebarContent smallPadding={true} />
+      </Drawer>
+
+      <div className="hidden lg:block w-64">
+        <SidebarContent smallPadding={false} />
+      </div>
+
+      <div className="flex-1 p-4">
+        {renderContent()}
       </div>
     </div>
   );
